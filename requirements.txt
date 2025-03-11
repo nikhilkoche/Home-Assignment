@@ -1,0 +1,11 @@
+fastapi
+python-dotenv
+uvicorn[standard]
+langchain_core
+langchain==0.3.15
+langchain_community==0.3.15
+langchain_pinecone
+langchain_openai
+pymupdf
+pdfplumber
+python-multipart
