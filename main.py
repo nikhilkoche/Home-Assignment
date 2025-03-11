@@ -56,7 +56,7 @@ def bot_creation(retriever: ContextualCompressionRetriever,
 async def get_ai_response(message: str, chain, session_id: str):
    
     content: str = ""
-    print("Entered get_ai_response")
+    # print("Entered get_ai_response")
 
     async for chunk in chain.astream({"input": message}, config={"configurable": {"session_id": session_id}}):
         # print("Raw chunk received:", chunk)  

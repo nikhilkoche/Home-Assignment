@@ -1,5 +1,5 @@
-from langchain_community.embeddings import OpenAIEmbeddings
-from langchain_pinecone import Pinecone
+from langchain_openai import OpenAIEmbeddings
+from langchain_pinecone import PineconeVectorStore
 from langchain.schema import Document
 from typing import List, Dict, Any, Optional, Tuple, Union
 from pinecone import Pinecone as PineconeClient, ServerlessSpec
@@ -47,7 +47,7 @@ class PineconeDB:
         self.index = self.pc.Index(index_name)
         
         # Initialize LangChain's Pinecone integration
-        self.vectorstore = Pinecone(
+        self.vectorstore = PineconeVectorStore(
             index=self.index,
             embedding=self.embeddings,
             text_key="text"
