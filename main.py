@@ -20,28 +20,7 @@ from langchain.chains import create_history_aware_retriever, create_retrieval_ch
 from langchain.retrievers.document_compressors import EmbeddingsFilter
 from llm.chat import question_answer_prompt, contextualize_q_prompt
 import asyncio
-from fastapi import FastAPI, File, UploadFile, APIRouter, Request, WebSocket, WebSocketDisconnect, status, BackgroundTasks, HTTPException
-from fastapi.responses import HTMLResponse
-import uvicorn
-from app_config import APP_CONFIG
-from pathlib import Path
-from utils import PDFProcessor
-from vectordb import PineconeDB
-from fastapi.responses import JSONResponse
-from langchain_pinecone import PineconeVectorStore
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from fastapi.middleware.cors import CORSMiddleware
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from connection_manager import ConnectionManager
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from llm.session_history import get_session_history
-from contextlib import asynccontextmanager
-from langchain.chains import create_history_aware_retriever, create_retrieval_chain
-from langchain.retrievers.document_compressors import EmbeddingsFilter
-from llm.chat import question_answer_prompt, contextualize_q_prompt
-import asyncio
+
 
 app = FastAPI()
 docs_dir = 'documents/'
