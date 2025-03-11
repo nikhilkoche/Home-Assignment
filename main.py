@@ -41,20 +41,7 @@ def bot_creation(retriever: ContextualCompressionRetriever,
                  contextualize_q_prompt: ChatPromptTemplate, 
                  qa_prompt: ChatPromptTemplate
                  ) -> RunnableWithMessageHistory:
-    """
-    
-    Function to create the LangChain model for the chatbot.
-
-    Args:
-        retriever: The retriever model
-        llm: The language model
-        contextualize_q_prompt: The prompt for the contextualization model
-        qa_prompt: The prompt for the question-answer model
-    
-    Returns:
-        RunnableWithMessageHistory: The LangChain model
-    
-    """
+   
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
@@ -67,17 +54,7 @@ def bot_creation(retriever: ContextualCompressionRetriever,
     )
 
 async def get_ai_response(message: str, chain, session_id: str):
-    """
-    Function to get the streamed response from the AI model.
-
-    Args:
-        message: The message to send to the AI model
-        chain: The LangChain model
-        session_id: The session ID for the conversation (used for chat history context)
-
-    Returns:
-        AsyncGenerator: The generator for the AI model response
-    """
+   
     content: str = ""
     print("Entered get_ai_response")
 
@@ -102,18 +79,7 @@ async def get_ai_response(message: str, chain, session_id: str):
 
 @asynccontextmanager
 async def manage_connection(websocket: WebSocket, client_id: str):
-    """
-    
-    Function to manage the WebSocket connection.
-
-    Args:
-        websocket: The WebSocket connection
-        client_id: The client ID for the conversation
-    
-    Yields:
-        tuple[str, str]: The session ID and unique ID for the client
-    
-    """
+  
     session_id = None
     unique_id = None
     try:
@@ -126,9 +92,7 @@ async def manage_connection(websocket: WebSocket, client_id: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    """
-    Home page for the FastAPI app
-    """
+   
     current_dir = Path(__file__).parent
     with open(current_dir / 'index.html', 'r') as f:
         html_context = f.read()
@@ -136,7 +100,6 @@ async def home():
 
 @app.post("/upload_pdf")
 def upload_pdf_file(file: UploadFile = File(...)) -> JSONResponse:
-    """Handles PDF upload, processes it, and stores extracted text in Pinecone."""
     
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
@@ -173,14 +136,7 @@ def upload_pdf_file(file: UploadFile = File(...)) -> JSONResponse:
 
 @app.websocket("/chat/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    """
-    
-    WebSocket endpoint for the chatbot.
-
-    Args:
-        websocket: The WebSocket connection
-        client_id: The client ID for the conversation
-    """
+   
     index_name = "project-j-index"
     pinecone_vectordb = PineconeVectorStore(index_name=index_name, 
                                             embedding=OpenAIEmbeddings(model="text-embedding-3-large"), 
