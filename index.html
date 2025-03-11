@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-gray-50 h-screen flex items-center justify-center p-4">
+    <div class="w-full h-full flex flex-col md:flex-row bg-white shadow-2xl rounded-lg overflow-hidden border border-gray-300">
+        
+        <!-- File Upload Section -->
+        <div class="w-full md:w-1/4 p-6 bg-gray-100 border-r flex flex-col items-center text-gray-800 relative">
+            <h2 class="text-lg font-bold text-indigo-700 mb-4 flex items-center">
+                <i class="fas fa-file-upload mr-2"></i>Upload PDF
+            </h2>
+            <div id="dropArea" class="w-full h-28 border-2 border-dashed border-indigo-400 flex items-center justify-center bg-indigo-100 rounded-lg cursor-pointer hover:bg-indigo-200 transition-all">
+                <p class="text-indigo-700 text-sm text-center">
+                    <i class="fas fa-cloud-upload-alt text-2xl"></i><br>Drag & Drop File Here
+                </p>
+            </div>
+            <input type="file" id="fileInput" accept="application/pdf" class="hidden">
+            <button id="uploadBtn" class="bg-indigo-600 text-white px-4 py-2 mt-4 rounded flex items-center hover:bg-indigo-500 transition-all shadow-md">
+                <i class="fas fa-upload mr-2"></i> Upload
+            </button>
+            <p id="uploadStatus" class="text-sm mt-2 text-gray-500"></p>
+            <p id="selectedFile" class="text-sm mt-2 text-indigo-700"></p>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="w-full md:w-3/4 flex flex-col h-full p-6 bg-white text-gray-900">
+            <h2 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                <i class="fas fa-comments mr-2"></i>Chat
+            </h2>
+            <div id="chatBox" class="flex-1 overflow-y-auto p-4 border rounded-lg h-full bg-gray-100 shadow-inner scrollbar-thin scrollbar-thumb-indigo-500">
+                <!-- Messages will be appended here -->
+            </div>
+            <p id="errorMsg" class="text-red-600 text-sm mt-2 hidden"></p>
+            <div class="flex mt-4 bg-gray-200 p-3 rounded-lg border border-gray-300">
+                <input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 bg-white text-gray-800 border border-gray-300 p-3 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" disabled>
+                <button id="sendBtn" class="bg-gray-400 text-white px-4 py-2 rounded ml-2 flex items-center cursor-not-allowed hover:bg-indigo-500 transition-all shadow-md" disabled>
+                    <i class="fas fa-paper-plane mr-2"></i>Send
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fileUploaded = false;
+        let ws; 
+        let retryAttempts = 0;
+
+        async function getWebSocketUrl() {
+            const clientId = Math.random().toString(36).substring(7); 
+            const wsProtocol = window.location.protocol === "https:" ? "wss://" : "ws://"; 
+            const wsHost = window.location.host; 
+            return `${wsProtocol}${wsHost}/chat/${clientId}`;
+        }
+        
+
+        async function initializeWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) return; 
+
+            const wsUrl = await getWebSocketUrl();
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                retryAttempts = 0;
+                console.log("WebSocket connected to:", wsUrl);
+                hideError();
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const response = JSON.parse(event.data);
+                    handleStreamedMessage(response);
+                } catch (error) {
+                    showError("Error processing server response.");
+                }
+            };
+
+            ws.onerror = () => {
+                showError("WebSocket encountered an error.");
+            };
+
+            ws.onclose = () => {
+                console.warn("WebSocket closed.");
+                if (retryAttempts < 3) {
+                    retryAttempts++;
+                    setTimeout(initializeWebSocket, 2000);
+                } else {
+                    showError("Lost connection to server.");
+                }
+            };
+        }
+
+        let lastBotMessageDiv = null;
+        let isStreaming = false;
+
+        function handleStreamedMessage(response) {
+            const chatBox = document.getElementById("chatBox");
+            const messageInput = document.getElementById("messageInput");
+            const sendBtn = document.getElementById("sendBtn");
+
+            if (response.type === "stream") {
+                
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                sendBtn.classList.add("cursor-not-allowed", "opacity-50");
+
+                
+                if (!lastBotMessageDiv || lastBotMessageDiv.dataset.complete === "true") {
+                    lastBotMessageDiv = document.createElement("div");
+                    lastBotMessageDiv.classList.add(
+                        "p-3",
+                        "mb-2",
+                        "border",
+                        "rounded-lg",
+                        "shadow-sm",
+                        "fade-in",
+                        "bg-gray-300"
+                    );
+                    lastBotMessageDiv.innerHTML = `<strong><i class="fas fa-robot mr-2"></i>Bot:</strong> <p class="bot-message-content"></p>`;
+                    lastBotMessageDiv.dataset.complete = "false";
+                    chatBox.appendChild(lastBotMessageDiv);
+                }
+
+                
+                let messageContent = lastBotMessageDiv.querySelector(".bot-message-content");
+                messageContent.innerHTML = marked.parse(response.content);
+                chatBox.scrollTop = chatBox.scrollHeight; 
+            }
+
+            if (response.type === "done") {
+                
+                if (lastBotMessageDiv) lastBotMessageDiv.dataset.complete = "true";
+
+                
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                sendBtn.classList.remove("cursor-not-allowed", "opacity-50");
+                messageInput.focus();
+            }
+        }
+
+        function sendMessage() {
+            if (!fileUploaded || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value.trim();
+
+            if (message.length > 0) {
+                appendMessage("You", message); 
+                ws.send(JSON.stringify({ text: message })); 
+                messageInput.value = ""; 
+                messageInput.focus(); 
+            }
+        }
+
+
+        function appendMessage(sender, text) {
+            const chatBox = document.getElementById("chatBox");
+            const messageDiv = document.createElement("div");
+
+            messageDiv.classList.add(
+                ... (sender === "You"
+                    ? ["bg-indigo-500", "text-white"]
+                    : ["bg-gray-300"])
+            );
+
+            messageDiv.classList.add("p-3", "mb-2", "border", "rounded-lg", "shadow-sm");
+
+            messageDiv.innerHTML = `<strong><i class="fas ${sender === "You" ? "fa-user" : "fa-robot"} mr-2"></i>${sender}:</strong> <p>${marked.parse(text)}</p>`;
+            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight; 
+        }
+    
+        function showError(message) {
+            const errorMsg = document.getElementById("errorMsg");
+            errorMsg.textContent = message;
+            errorMsg.classList.remove("hidden");
+        }
+    
+        function hideError() {
+            document.getElementById("errorMsg").classList.add("hidden");
+        }
+    
+        document.getElementById("uploadBtn").addEventListener("click", async () => {
+            const fileInput = document.getElementById("fileInput");
+            const uploadBtn = document.getElementById("uploadBtn");
+            const uploadStatus = document.getElementById("uploadStatus");
+
+            if (fileInput.files.length === 0) {
+                showError("Please select a PDF file first.");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (file.type !== "application/pdf") {
+                showError("Only PDF files are allowed.");
+                return;
+            }
+
+            hideError();
+            uploadStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading file...`;
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add("cursor-not-allowed", "opacity-50");
+
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await fetch("http://localhost:8000/upload_pdf", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) throw new Error("Failed to upload file.");
+
+                const data = await response.json();
+                if (data.message) {
+                    uploadStatus.innerHTML = `<i class="fas fa-check-circle text-green-600"></i> ${data.message} <br> Total Chunks: ${data.total_chunks}`;
+                    fileUploaded = true;
+
+                    
+                    document.getElementById("messageInput").disabled = false;
+                    const sendBtn = document.getElementById("sendBtn");
+                    sendBtn.disabled = false;
+                    sendBtn.classList.replace("bg-gray-400", "bg-indigo-500");
+                    sendBtn.classList.remove("cursor-not-allowed");
+
+                    
+                    initializeWebSocket();
+                }
+            } catch (error) {
+                uploadStatus.innerHTML = `<i class="fas fa-exclamation-circle text-red-600"></i> Error uploading file`;
+                showError("Failed to upload. Please try again.");
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.classList.remove("cursor-not-allowed", "opacity-50");
+            }
+        });
+    
+        document.getElementById("dropArea").addEventListener("click", () => {
+            document.getElementById("fileInput").click();
+        });
+
+        document.getElementById("fileInput").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            const selectedFile = document.getElementById("selectedFile");
+
+            if (file) {
+                selectedFile.innerHTML = `<i class="fas fa-file-alt text-green-600"></i> <strong>${file.name}</strong> is ready to upload.`;
+                selectedFile.classList.remove("hidden");
+            }
+        });
+        document.getElementById("sendBtn").addEventListener("click", sendMessage);
+
+        
+        document.getElementById("messageInput").addEventListener("keypress", (event) => {
+            if (event.key === "Enter" && fileUploaded) {
+                event.preventDefault(); 
+                sendMessage();
+            }
+        });
+    </script>    
+</body>
+</html>
