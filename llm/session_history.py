@@ -4,13 +4,7 @@ from langchain_core.chat_history import BaseChatMessageHistory
 store: dict = {}
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    """
-    Args:
-        session_id: The session ID for the conversation
-    
-    Returns:
-        BaseChatMessageHistory: The chat message history for the session
-    """
+   
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
