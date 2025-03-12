@@ -155,7 +155,7 @@
                 let messageContent = lastBotMessageDiv.querySelector(".bot-message-content");
                 messageContent.innerHTML = marked.parse(response.content);
 
-                // ✅ Ensure Math is Rendered Properly
+              
                 setTimeout(() => renderMathInText(messageContent), 50);
 
                 chatBox.scrollTop = chatBox.scrollHeight;
@@ -203,7 +203,7 @@
             chatBox.appendChild(messageDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            // ✅ Ensure Math is Rendered Properly
+            
             setTimeout(() => renderMathInText(messageDiv), 50);
         }
 
@@ -370,7 +370,7 @@
             if (files.length > 0) {
                 fileInput.files = files; // Assign dropped file to the input field
 
-                // 🚀 Manually trigger the change event so the selection works!
+               
                 const changeEvent = new Event("change", { bubbles: true });
                 fileInput.dispatchEvent(changeEvent);
             }
@@ -384,7 +384,7 @@
 
         // Make dropArea clickable to open file dialog
         dropArea.addEventListener("click", () => {
-            fileInput.click(); // ✅ Allows file selection on click
+            fileInput.click(); 
         });
 
         // Process the selected file
