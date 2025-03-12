@@ -150,3 +150,12 @@ Visit http://localhost:8000 in your browser.
     docker run -p 8000:8000 rag-app
     ```
 
+## Technologies Used
+- **Python 3.12**
+- **LangChain**
+- **FastAPI** (WebSocket)
+- **PineconeDB** (Vector DB)
+- **HTML**
+- **CSS** (Tailwind)
+- **JavaScript**
+- **AWS** (EC2 and API Key Management)
