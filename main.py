@@ -22,7 +22,7 @@ from llm.chat import question_answer_prompt, contextualize_q_prompt
 import asyncio
 
 
-app = FastAPI()
+app = FastAPI(debug = True)
 docs_dir = 'documents/'
 
 
@@ -105,32 +105,41 @@ def upload_pdf_file(file: UploadFile = File(...)) -> JSONResponse:
         raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
 
     try:
-        # Save the uploaded PDF
+        
         file_path = f"{docs_dir}/{file.filename}"
+        # Upload extracted text chunks to Pinecone
+        pc = PineconeDB(pinecone_api_key=APP_CONFIG.get('pinecone_key'),
+                        openai_api_key=APP_CONFIG.get('openai_key'), 
+                        index_name="project-j-index")
+        
+        if pc.is_document_processed(pc):
+            return JSONResponse(
+                status_code=200,
+                content={"message": "PDF already processed. Skipping re-chunking."}
+            )
+        # Save the uploaded PDF
         with open(file_path, 'wb') as f:
             f.write(file.file.read())
-
         file.file.close()
 
         # Process the PDF
         pdf_processor = PDFProcessor(file_path)
         documents = pdf_processor.process()
 
-        # Upload extracted text chunks to Pinecone
-        pc = PineconeDB(pinecone_api_key=APP_CONFIG.get('pinecone_key'),
-                        openai_api_key=APP_CONFIG.get('openai_key'), 
-                        index_name="project-j-index")
-        document_ids = pc.add_documents(documents)
+        
+        document_ids = pc.add_documents(documents,  file.filename)
 
         return JSONResponse(
             status_code=200,
             content={
                 "message": "PDF processed and uploaded successfully.",
                 "total_chunks": len(documents),
+                "uploaded_document_ids": document_ids
             }
         )
 
     except Exception as e:
+        print(str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
