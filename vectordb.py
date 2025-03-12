@@ -12,15 +12,7 @@ class PineconeDB:
         index_name: str,
         embedding_model: str = "text-embedding-3-large"
     ):
-        """
-        Initialize Pinecone database with LangChain Document support.
         
-        Args:
-            pinecone_api_key: Your Pinecone API key
-            openai_api_key: Your OpenAI API key
-            index_name: Name of the index to use
-            embedding_model: OpenAI embedding model to use
-        """
         # Initialize Pinecone
         self.pc = PineconeClient(api_key=pinecone_api_key)
         
@@ -54,15 +46,7 @@ class PineconeDB:
         )
     
     def is_document_processed(self, pc) -> bool:
-        """
-        Checks if a document with the given filename is already processed in Pinecone.
         
-        Args:
-            filename (str): The name of the PDF file.
-        
-        Returns:
-            bool: True if the document is already processed, False otherwise.
-        """
         stats = pc.index.describe_index_stats()
         return stats.get('total_vector_count') > 0  
     
