@@ -7,6 +7,7 @@ This project implements a **Retrieval Augmented Generation (RAG)** system design
 ✅ **Efficient engineering performance** with faster response times, reduced latency, and optimized token usage  
 ✅ **User-friendly experience** with real-time streamed responses and a web interface  
 
+**Note:** This project is hosted on a free tier server, so performance may be limited.
 ---
 
 ## Key Features That Improve Output Quality and Application Performance
