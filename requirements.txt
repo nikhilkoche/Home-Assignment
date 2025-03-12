@@ -9,3 +9,4 @@ langchain_openai
 pymupdf
 pdfplumber
 python-multipart
+boto3

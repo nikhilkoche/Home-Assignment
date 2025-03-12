@@ -53,7 +53,20 @@ class PineconeDB:
             text_key="text"
         )
     
-    def add_documents(self, documents: List[Document]) -> List[str]:
+    def is_document_processed(self, pc) -> bool:
+        """
+        Checks if a document with the given filename is already processed in Pinecone.
+        
+        Args:
+            filename (str): The name of the PDF file.
+        
+        Returns:
+            bool: True if the document is already processed, False otherwise.
+        """
+        stats = pc.index.describe_index_stats()
+        return stats.get('total_vector_count') > 0  
+    
+    def add_documents(self, documents: List[Document], filename: str) -> List[str]:
         """
         Add LangChain Document objects to the vector database.
         
@@ -64,7 +77,7 @@ class PineconeDB:
             List of document IDs
         """
         texts = [doc.page_content for doc in documents]
-        metadatas = [{"text": doc.page_content, **doc.metadata} for doc in documents]
+        metadatas = [{"text": doc.page_content,  "source": filename,**doc.metadata} for doc in documents]
         
         return self.vectorstore.add_texts(
             texts=texts,
