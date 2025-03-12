@@ -9,7 +9,7 @@ This project implements a **Retrieval Augmented Generation (RAG)** system design
 
 ---
 
-## Key Features That Improve Output Quality
+## Key Features That Improve Output Quality and Application Performance
 ### 1. Pre-check for Processed Documents (VectorDB Optimization - vectordb.py) 
 ![check](/images/skipping.png)
 - Before processing a document, the system checks if it has already been indexed in Pinecone.
