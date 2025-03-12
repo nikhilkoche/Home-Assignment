@@ -14,7 +14,6 @@ class PDFProcessor:
         self.tables_by_page = {}
 
     def extract_tables(self):
-        """Extract tables from the PDF, ensuring no image-based tables are mistakenly captured."""
         with pdfplumber.open(self.pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages):
                 tables = page.extract_tables()
@@ -28,7 +27,7 @@ class PDFProcessor:
                     ]
                     table_text = "\n".join(cleaned_table)
 
-                    # 🚨 **Ignore "Fake Tables" (short or numeric-only)**
+                    
                     if len(table_text.strip()) > 5 and not table_text.isnumeric():
                         table_texts.append(table_text)
 

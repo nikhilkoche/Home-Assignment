@@ -51,15 +51,7 @@ class PineconeDB:
         return stats.get('total_vector_count') > 0  
     
     def add_documents(self, documents: List[Document], filename: str) -> List[str]:
-        """
-        Add LangChain Document objects to the vector database.
-        
-        Args:
-            documents: List of LangChain Document objects
-            
-        Returns:
-            List of document IDs
-        """
+    
         texts = [doc.page_content for doc in documents]
         metadatas = [{"text": doc.page_content,  "source": filename,**doc.metadata} for doc in documents]
         
@@ -75,18 +67,7 @@ class PineconeDB:
         filter: Optional[Dict[str, Any]] = None,
         include_metadata: bool = True
     ) -> List[Document]:
-        """
-        Search for similar documents.
-        
-        Args:
-            query: Query text or Document object
-            k: Number of results to return
-            filter: Optional metadata filter
-            include_metadata: Whether to include metadata in results
-            
-        Returns:
-            List of similar Document objects
-        """
+
         if isinstance(query, Document):
             query = query.page_content
             
@@ -103,17 +84,7 @@ class PineconeDB:
         k: int = 4,
         filter: Optional[Dict[str, Any]] = None
     ) -> List[Tuple[Document, float]]:
-        """
-        Search for similar documents and return similarity scores.
-        
-        Args:
-            query: Query text or Document object
-            k: Number of results to return
-            filter: Optional metadata filter
-            
-        Returns:
-            List of tuples (Document, score)
-        """
+    
         if isinstance(query, Document):
             query = query.page_content
             
@@ -124,10 +95,5 @@ class PineconeDB:
         )
     
     def delete_documents(self, ids: List[str]) -> None:
-        """
-        Delete documents from the database.
-        
-        Args:
-            ids: List of document IDs to delete
-        """
+    
         self.vectorstore.delete(ids)
